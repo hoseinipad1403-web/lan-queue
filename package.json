@@ -1,0 +1,14 @@
+
+{
+  "name": "lan-queue-web-v12-railway",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LAN Queue app (login, dashboard, XML/CSV, TTS FA) - Railway ready",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

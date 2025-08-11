@@ -1,0 +1,32 @@
+[
+  {
+    "username": "admin",
+    "password": "1234",
+    "display": "مدیر اصلی",
+    "is_admin": true
+  },
+  {
+    "username": "ali",
+    "password": "2222",
+    "display": "علی احمدی",
+    "is_admin": false
+  },
+  {
+    "username": "sara",
+    "password": "3333",
+    "display": "سارا محمدی",
+    "is_admin": false
+  },
+  {
+    "username": "reza",
+    "password": "4444",
+    "display": "رضا راد",
+    "is_admin": false
+  },
+  {
+    "username": "mina",
+    "password": "5555",
+    "display": "مینا موسوی",
+    "is_admin": false
+  }
+]
