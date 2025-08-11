@@ -1,0 +1,252 @@
+<!doctype html><html lang="fa" dir="rtl"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>داشبورد | نوبت LAN</title>
+<style>
+body{font-family:sans-serif;max-width:820px;margin:20px auto;padding:0 12px}h1{font-size:20px}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}button{padding:12px;font-size:15px}
+section{border:1px solid #ddd;border-radius:8px;padding:12px;margin:12px 0}input{padding:8px;font-size:16px}
+.row{display:flex;gap:8px;flex-wrap:wrap}table{width:100%;border-collapse:collapse;font-size:14px}th,td{border:1px solid #ddd;padding:6px;text-align:center}
+.ok{color:#2e7d32}.err{color:#c00}.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.big{font-size:96px;font-weight:900;letter-spacing:2px}.center{display:flex;align-items:center;justify-content:center;min-height:160px;border:2px dashed #ccc;border-radius:12px;margin-top:10px;flex-direction:column}
+.small{font-size:12px;color:#555}
+.list{max-height:220px;overflow:auto;border:1px solid #eee;border-radius:8px;padding:8px}
+.item{padding:6px;border-bottom:1px dashed #ddd;cursor:pointer}
+</style>
+</head><body>
+<div class="topbar"><h1>داشبورد</h1><button onclick="logout()">خروج</button></div>
+<div class="grid">
+  <button onclick="show('issue')">نوبت‌دهی</button>
+  <button onclick="show('photo')">ثبت شماره عکس</button>
+  <button onclick="show('print')">ثبت چاپ</button>
+  <button onclick="show('report')">خروجی/چک‌کردن</button>
+  <button onclick="show('stats')">گزارش آمار</button>
+  <button onclick="show('call')">فراخوان (صوتی)</button>
+  <button onclick="show('users')">مدیریت کاربران</button>
+</div>
+
+<section id="issue" style="display:none">
+  <h2>نوبت‌دهی</h2>
+  <div class="row"><input id="phoneIssue" placeholder="09xxxxxxxxx" dir="ltr"/><button onclick="issue()">ثبت نوبت</button></div>
+  <div id="issueMsg"></div>
+  <div id="bigBox" class="center" style="display:none">
+    <div>نوبت شما</div>
+    <div id="bigNumber" class="big">-</div>
+    <div id="bigDate" class="small">-</div>
+    <button onclick="openPrint()">چاپ رسید</button>
+  </div>
+</section>
+
+<section id="photo" style="display:none">
+  <h2>ثبت شماره عکس</h2>
+  <div class="row" style="align-items:flex-end">
+    <div><label>شماره موبایل</label><input id="phonePhoto" placeholder="09xxxxxxxxx" dir="ltr"/></div>
+    <div><label>شماره عکس</label><input id="photoNumber" placeholder="مثلاً 125" dir="ltr"/></div>
+    <button onclick="markPhoto()">ثبت عکس</button>
+    <button onclick="loadLastNoPhoto()">آخرین نوبت‌ها</button>
+  </div>
+  <div id="photoMsg"></div>
+  <div id="listNoPhoto" class="list" style="display:none"></div>
+</section>
+
+<section id="print" style="display:none">
+  <h2>ثبت چاپ</h2>
+  <div class="row">
+    <input id="phonePrint" placeholder="09xxxxxxxxx" dir="ltr"/>
+    <button onclick="markPrint()">ثبت چاپ</button>
+    <button onclick="loadLastToPrint()">آخرین نوبت‌ها</button>
+  </div>
+  <div id="printMsg"></div>
+  <div id="listToPrint" class="list" style="display:none"></div>
+</section>
+
+<section id="report" style="display:none">
+  <h2>خروجی و چک‌کردن</h2>
+  <div class="row">
+    <input id="dateFilter" placeholder="تاریخ شمسی مثل 1403/05/21"/>
+    <button onclick="loadList()">نمایش</button>
+    <button onclick="downloadCSV()">دانلود CSV</button>
+    <button onclick="downloadXML()">دانلود XML</button>
+    <input id="printNumber" placeholder="شماره نوبت برای چاپ" dir="ltr"/>
+    <button onclick="goPrint()">چاپ این نوبت</button>
+  </div>
+  <div style="overflow:auto"><table id="tbl"><thead>
+    <tr><th>نوبت</th><th>موبایل</th><th>تاریخ</th><th>ساعت ثبت</th><th>ثبت‌کننده</th>
+        <th>شماره عکس</th><th>تاریخ/ساعت عکس</th><th>ثبت‌کننده عکس</th>
+        <th>تاریخ/ساعت چاپ</th><th>ثبت‌کننده چاپ</th></tr>
+  </thead><tbody></tbody></table></div>
+</section>
+
+<section id="stats" style="display:none">
+  <h2>گزارش آمار</h2>
+  <div class="row">
+    <input id="fromDate" placeholder="از تاریخ (شمسی)"/>
+    <input id="toDate" placeholder="تا تاریخ (شمسی)"/>
+    <button onclick="loadStats()">نمایش</button>
+  </div>
+  <div id="statsBox" style="margin-top:10px"></div>
+</section>
+
+<section id="call" style="display:none">
+  <h2>فراخوان نوبت (صوتی)</h2>
+  <div class="row">
+    <input id="callDate" placeholder="تاریخ (خالی=امروز)"/>
+    <button onclick="loadRemaining()">بارگذاری نوبت‌های باقی‌مانده</button>
+    <button onclick="callNext()">فراخوان بعدی ▶</button>
+    <button onclick="stopCall()">توقف ⏹</button>
+  </div>
+  <div id="remainList" class="list" style="margin-top:8px"></div>
+</section>
+
+<section id="users" style="display:none">
+  <h2>مدیریت کاربران</h2>
+  <div class="row">
+    <input id="u_username" placeholder="نام کاربری"/>
+    <input id="u_password" placeholder="رمز" type="password"/>
+    <input id="u_display" placeholder="نام نمایشی"/>
+    <label><input type="checkbox" id="u_admin"/> ادمین</label>
+    <button onclick="userAdd()">افزودن</button>
+  </div>
+  <div id="usersList" class="list" style="margin-top:8px"></div>
+</section>
+
+<script>
+function show(id){ for(const s of ['issue','photo','print','report','stats','call','users']) document.getElementById(s).style.display=(s===id?'block':'none'); }
+async function logout(){ await fetch('/logout',{method:'POST',credentials:'include'}); location.href='/'; }
+function esc(s){ return String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+let lastIssuedNumber=null;
+async function issue(){
+  const phone=document.getElementById('phoneIssue').value.trim(); const el=document.getElementById('issueMsg'); el.textContent='';
+  try{
+    const r=await fetch('/issue',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone})});
+    const j=await r.json(); if(!r.ok) throw new Error(j.error||r.statusText);
+    const dup=j.duplicate?' (نوبت قبلی همین امروز)':'';
+    el.innerHTML=`<div class="ok">نوبت: <b>${j.number}</b> — تاریخ: ${esc(j.date_jalali)} — ساعت: ${esc(j.created_time)}${dup}</div>`;
+    lastIssuedNumber=j.number;
+    document.getElementById('bigNumber').textContent=j.number;
+    document.getElementById('bigDate').textContent='تاریخ: '+j.date_jalali;
+    document.getElementById('bigBox').style.display='flex';
+  }catch(e){ el.innerHTML=`<div class="err">خطا: ${e.message}</div>`; }
+}
+function openPrint(){ if(lastIssuedNumber) window.open('/print.html?number='+encodeURIComponent(lastIssuedNumber),'_blank'); }
+
+async function markPhoto(){
+  const phone=document.getElementById('phonePhoto').value.trim();
+  const pnum=document.getElementById('photoNumber').value.trim();
+  const el=document.getElementById('photoMsg'); el.textContent='';
+  try{
+    const r=await fetch('/photo-registered',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,photo_number:pnum})});
+    const j=await r.json(); if(!r.ok) throw new Error(j.error||r.statusText);
+    el.innerHTML=`<div class="ok">نوبت ${j.number} ثبت عکس شد — شماره عکس: <b>${esc(j.photo_number)}</b> — ${esc(j.date_jalali)} ${esc(j.time)}</div>`;
+  }catch(e){ el.innerHTML=`<div class="err">خطا: ${e.message}</div>`; }
+}
+async function loadLastNoPhoto(){
+  const r=await fetch('/list',{credentials:'include'}); const list=await r.json();
+  const today=list.filter(t=>t.date_jalali && t.photo_registered_date===null).slice(-20).reverse();
+  const box=document.getElementById('listNoPhoto'); box.innerHTML=''; box.style.display='block';
+  today.forEach(t=>{ const d=document.createElement('div'); d.className='item'; d.textContent=`نوبت ${t.number} — ${t.phone}`; d.onclick=()=>{ document.getElementById('phonePhoto').value=t.phone; }; box.appendChild(d); });
+}
+
+async function markPrint(){
+  const phone=document.getElementById('phonePrint').value.trim();
+  const el=document.getElementById('printMsg'); el.textContent='';
+  try{
+    const r=await fetch('/photo-printed',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone})});
+    const j=await r.json(); if(!r.ok) throw new Error(j.error||r.statusText);
+    el.innerHTML=`<div class="ok">چاپ ثبت شد — نوبت ${j.number} — ${esc(j.date_jalali)} ${esc(j.time)}</div>`;
+  }catch(e){ el.innerHTML=`<div class="err">خطا: ${e.message}</div>`; }
+}
+async function loadLastToPrint(){
+  const r=await fetch('/list',{credentials:'include'}); const list=await r.json();
+  const today=list.filter(t=>t.photo_registered_date && !t.photo_printed_date).slice(-20).reverse();
+  const box=document.getElementById('listToPrint'); box.innerHTML=''; box.style.display='block';
+  today.forEach(t=>{ const d=document.createElement('div'); d.className='item'; d.textContent=`نوبت ${t.number} — ${t.phone}`; d.onclick=()=>{ document.getElementById('phonePrint').value=t.phone; }; box.appendChild(d); });
+}
+
+async function loadList(){
+  const date=document.getElementById('dateFilter').value.trim();
+  const r=await fetch('/list'+(date?`?date=${encodeURIComponent(date)}`:''),{credentials:'include'});
+  const list=await r.json();
+  const tbody=document.querySelector('#tbl tbody'); tbody.innerHTML='';
+  for(const t of list){
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${t.number}</td><td>${esc(t.phone)}</td><td>${esc(t.date_jalali)}</td><td>${esc(t.created_time||'-')}</td><td>${esc(t.created_by||'-')}</td>
+    <td>${esc(t.photo_number||'-')}</td><td>${esc((t.photo_registered_date||'-')+' '+(t.photo_registered_time||''))}</td><td>${esc(t.photo_registered_by||'-')}</td>
+    <td>${esc((t.photo_printed_date||'-')+' '+(t.photo_printed_time||''))}</td><td>${esc(t.photo_printed_by||'-')}</td>`;
+    tbody.appendChild(tr);
+  }
+}
+function downloadCSV(){ const d=document.getElementById('dateFilter').value.trim(); const a=document.createElement('a'); a.href='/csv'+(d?`?date=${encodeURIComponent(d)}`:''); a.download='tickets.csv'; document.body.appendChild(a); a.click(); a.remove(); }
+function downloadXML(){ const d=document.getElementById('dateFilter').value.trim(); const a=document.createElement('a'); a.href='/xml'+(d?`?date=${encodeURIComponent(d)}`:''); a.download='tickets.xml'; document.body.appendChild(a); a.click(); a.remove(); }
+function goPrint(){ const n=document.getElementById('printNumber').value.trim(); if(n) window.open('/print.html?number='+encodeURIComponent(n),'_blank'); }
+
+async function loadStats(){
+  const from=document.getElementById('fromDate').value.trim();
+  const to  =document.getElementById('toDate').value.trim();
+  const q=[]; if(from) q.push('from='+encodeURIComponent(from)); if(to) q.push('to='+encodeURIComponent(to));
+  const r=await fetch('/stats'+(q.length?('?'+q.join('&')):''),{credentials:'include'});
+  const j=await r.json();
+  document.getElementById('statsBox').innerHTML = `
+    <div>از: <b>${esc(j.from||'-')}</b> — تا: <b>${esc(j.to||'-')}</b></div>
+    <div>📝 نوبت‌ها: <b>${j.countIssue}</b></div>
+    <div>📷 ثبت عکس‌ها: <b>${j.countPhoto}</b></div>
+    <div>🖨 چاپ‌ها: <b>${j.countPrint}</b></div>`;
+}
+
+// TTS
+let remain=[], idx=0;
+function speakFa(text){
+  if(!('speechSynthesis' in window)) { alert('مرورگر از گفتار پشتیبانی نمی‌کند'); return; }
+  const u=new SpeechSynthesisUtterance(text);
+  const vs=speechSynthesis.getVoices();
+  const fa=vs.find(v=>v.lang&&v.lang.toLowerCase().startsWith('fa'));
+  if(fa) u.voice=fa;
+  u.rate=1; u.pitch=1; u.volume=1;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+async function loadRemaining(){
+  const d=document.getElementById('callDate').value.trim();
+  const r=await fetch('/list'+(d?`?date=${encodeURIComponent(d)}`:''),{credentials:'include'});
+  const list=await r.json();
+  remain=list.filter(t=>!t.photo_printed_date);
+  idx=0;
+  const box=document.getElementById('remainList'); box.innerHTML='';
+  remain.forEach(t=>{ const el=document.createElement('div'); el.className='item'; el.textContent='نوبت '+t.number; el.onclick=()=>speakFa('نوبت عکس شماره '+t.number); box.appendChild(el); });
+}
+function callNext(){ if(idx>=remain.length) return; const n=remain[idx++].number; speakFa('نوبت عکس شماره '+n); }
+function stopCall(){ if('speechSynthesis' in window) speechSynthesis.cancel(); }
+
+// user management (admin)
+async function loadUsers(){
+  const r=await fetch('/users',{credentials:'include'});
+  if(!r.ok){ document.getElementById('usersList').innerHTML='<div class="err">فقط ادمین</div>'; return; }
+  const list=await r.json();
+  const box=document.getElementById('usersList'); box.innerHTML='';
+  list.forEach(u=>{
+    const d=document.createElement('div'); d.className='item';
+    d.innerHTML = `${u.username} — ${esc(u.display)} ${u.is_admin?'(ادمین)':''}
+      <button onclick="userDel('${u.username}')">حذف</button>`;
+    box.appendChild(d);
+  });
+}
+async function userAdd(){
+  const username=document.getElementById('u_username').value.trim();
+  const password=document.getElementById('u_password').value.trim();
+  const display =document.getElementById('u_display').value.trim()||username;
+  const is_admin=document.getElementById('u_admin').checked;
+  const r=await fetch('/users',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password,display,is_admin})});
+  if(r.ok){ loadUsers(); } else { const j=await r.json(); alert(j.error||'خطا'); }
+}
+async function userDel(username){
+  if(!confirm('حذف کاربر '+username+'?')) return;
+  const r=await fetch('/users',{method:'DELETE',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({username})});
+  if(r.ok){ loadUsers(); } else { const j=await r.json(); alert(j.error||'خطا'); }
+}
+
+// auto-load lists when opening sections
+document.querySelectorAll('.grid button').forEach(btn=> btn.addEventListener('click', ()=>{
+  if(btn.textContent.includes('کاربران')) loadUsers();
+  if(btn.textContent.includes('گزارش آمار')) loadStats();
+}));
+</script>
+</body></html>
