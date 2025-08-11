@@ -1,0 +1,45 @@
+<!doctype html><html lang="fa" dir="rtl"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>رسید نوبت</title>
+<style>
+@media print { .noprint{ display:none } body{ margin:0 } }
+body{font-family:sans-serif;max-width:600px;margin:20px auto;padding:0 16px}
+.card{border:2px solid #000;border-radius:12px;padding:24px;text-align:center}
+.big{font-size:140px;font-weight:900;line-height:1;margin:10px 0}
+.info{margin-top:10px;font-size:18px}
+hr{margin:16px 0}
+h1{margin:0;font-size:22px}
+.small{font-size:14px;color:#555}
+</style>
+</head><body>
+<div class="noprint" style="text-align:right"><button onclick="window.print()">پرینت</button></div>
+<div class="card">
+  <h1 id="title">رسید نوبت</h1>
+  <div class="small" id="subtitle">نوبت شما</div>
+  <div class="big" id="num">-</div>
+  <div class="info">
+    <div id="date">تاریخ: -</div>
+    <div id="phone">شماره موبایل: -</div>
+  </div>
+  <hr>
+  <div class="small">ساعت ثبت: <span id="ctime">-</span></div>
+  <div class="small">ثبت‌کننده: <span id="cby">-</span></div>
+</div>
+
+<script>
+function qs(k){ return new URLSearchParams(location.search).get(k); }
+async function load(){
+  const number = qs('number');
+  if(!number){ alert('number لازم است'); return; }
+  const r = await fetch('/ticket?number='+encodeURIComponent(number), {credentials:'include'});
+  const t = await r.json();
+  if(!r.ok){ alert(t.error||'not found'); return; }
+  document.getElementById('num').textContent = t.number;
+  document.getElementById('date').textContent = 'تاریخ: ' + (t.date_jalali || '-');
+  document.getElementById('phone').textContent = 'شماره موبایل: ' + (t.phone || '-');
+  document.getElementById('ctime').textContent = t.created_time || '-';
+  document.getElementById('cby').textContent   = t.created_by || '-';
+}
+load();
+</script>
+</body></html>
